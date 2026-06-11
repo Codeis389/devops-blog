@@ -1,0 +1,30 @@
+name: DevOps Blog CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t devops-blog .
+
+    - name: Test container runs
+      run: |
+        docker run -d -p 80:80 --name test-blog devops-blog
+        sleep 5
+        curl http://localhost:80 | grep "DevOps Journey"
+        docker stop test-blog
+        docker rm test-blog
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
